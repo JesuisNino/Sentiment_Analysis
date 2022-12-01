@@ -5,6 +5,8 @@ NB sentiment analyser.
 Start code.
 """
 import argparse
+import pandas as pd
+import re
 
 """
 IMPORTANT, modify this part with your details
@@ -22,6 +24,45 @@ def parse_args():
     parser.add_argument('-confusion_matrix', action=argparse.BooleanOptionalAction, default=False)
     args=parser.parse_args()
     return args
+
+
+class SentimentScales:
+    # [ 'negative', 'neutral' , 'positive' ]
+    scale_3 = [ 0, 1, 2 ]
+
+    # [ 'negative', 'somewhat negative', 'neutral', 'somewhat positive', 'positive' ]
+    scale_5 = [ 0, 1, 2, 3, 4 ]
+
+class Review:
+    def __init__(self, id, phrase, sentiment) :
+        self.id = id
+        self.phrase = phrase
+        self.sentiment = sentiment
+    
+    def get_reviews(filename):
+        reviews = []
+        file = pd.read_csv(filename, index_col=0, delimiter='\t')
+
+        for i, row in file.iterrows():
+            if 'Sentiment' in file.columns:
+                r = Review(i, row['Phrase'].split(), row['Sentiment'])
+            else:
+                r = Review(i, row['Phrase'].split(), -1)
+            reviews.append(r)
+        return reviews
+
+class Preprocess:
+    def __init__(self, reviews):
+        self.reviews = reviews
+
+    def preprocess_reviews(self):
+        pattern = r"\w+(?:'\w+)?|[^\w\s]"
+        for review in self.reviews:
+            ''' Lowercase a string using a Regular Expression '''
+            lower_review = re.sub(r"[A-Z]", lambda x: x.group(0).lower(), review)
+            ''' Tokenenise a string using a Regular Expression '''
+            token_review = re.findall(pattern, lower_review)
+
 
 
 def main():
@@ -51,6 +92,8 @@ def main():
     Create functions and classes, using the best practices of Software Engineering
     """
     
+
+
     #You need to change this in order to return your macro-F1 score for the dev set
     f1_score = 0
     
@@ -64,3 +107,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
