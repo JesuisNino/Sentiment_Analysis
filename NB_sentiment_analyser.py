@@ -66,6 +66,12 @@ class Preprocess:
             review.phrase = [r for r in review.phrase if not r.lower() in self.stop_words]
         return self.reviews
 
+    def scale_3(self):
+        for review in self.reviews:
+            if review.sentiment == 1: review.sentiment = 0
+            elif review.sentiment == 2: review.sentiment = 1
+            elif review.sentiment == 3 or 4: review.sentiment = 2
+        return self.reviews
 
 
 def main():
@@ -95,8 +101,8 @@ def main():
     Create functions and classes, using the best practices of Software Engineering
     """
     reviews = Review.get_reviews('moviereviews/train.tsv')
-    reviews_preprocessed = Preprocess(reviews).preprocess_reviews()
-    
+    reviews_preprocessed = Preprocess(reviews)
+    reviews_preprocessed = reviews_preprocessed.preprocess_reviews()
     
     f = open('debug.tsv', 'w')
     for review in reviews_preprocessed:
