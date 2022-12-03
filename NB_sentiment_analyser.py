@@ -6,7 +6,8 @@ Start code.
 """
 import argparse
 import pandas as pd
-import re
+import nltk
+from nltk.corpus import stopwords
 
 """
 IMPORTANT, modify this part with your details
@@ -54,14 +55,16 @@ class Review:
 class Preprocess:
     def __init__(self, reviews):
         self.reviews = reviews
+        stop_list = stopwords.words('english')
+        # Add some punctuation as the stopwords can be deleted
+        stop_list.extend([ '``', '\'\'', '...', '--', '.', ',' , '\'', '-', ':', ';', '!', '?', '\'s', '`', '\'re', 'A.'])
+        self.stop_words = set(stop_list)
 
     def preprocess_reviews(self):
-        pattern = r"\w+(?:'\w+)?|[^\w\s]"
         for review in self.reviews:
-            ''' Lowercase a string using a Regular Expression '''
-            lower_review = re.sub(r"[A-Z]", lambda x: x.group(0).lower(), review)
-            ''' Tokenenise a string using a Regular Expression '''
-            token_review = re.findall(pattern, lower_review)
+            # Tokenize the reviews using NLTK
+            review.phrase = [r for r in review.phrase if not r.lower() in self.stop_words]
+        return self.reviews
 
 
 
@@ -91,7 +94,15 @@ def main():
     ADD YOUR CODE HERE
     Create functions and classes, using the best practices of Software Engineering
     """
+    reviews = Review.get_reviews('moviereviews/train.tsv')
+    reviews_preprocessed = Preprocess(reviews).preprocess_reviews()
     
+    
+    f = open('debug.tsv', 'w')
+    for review in reviews_preprocessed:
+        f.write(str(review.phrase) + '\n')
+    f.close()
+
 
 
     #You need to change this in order to return your macro-F1 score for the dev set
