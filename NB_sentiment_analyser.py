@@ -79,61 +79,70 @@ class Classifier:
         self.reviews = reviews
         self.prior = dict()
         self.scale = scale
-        for i in self.scale:
+        for i in range(len(self.scale)):
             self.prior[i] = 0 
 
     def prior_probability(self):
         self.total_reviews = len(self.reviews)
-        if len(self.scale) == 5:
-            for review in self.reviews:
-                match review.sentiment: 
-                    case 0:
-                        self.prior['negative'] += 1
-                    case 1:
-                        self.prior['somewhat negative'] += 1
-                    case 2:
-                        self.prior['neutral'] += 1
-                    case 3:
-                        self.prior['somewhat positive'] += 1
-                    case 4:
-                        self.prior['positive'] += 1
-        else:
-            for review in self.reviews:
-                match review.sentiment: 
-                    case 0:
-                        self.prior['negative'] += 1
-                    case 1:
-                        self.prior['neutral'] += 1
-                    case 2:
-                        self.prior['positive'] += 1
+        for review in self.reviews:
+                self.prior[review.sentiment] += 1
+    
         for i in self.prior:
             self.prior[i] = self.prior[i] / self.total_reviews
+        
         return self.prior
         
     def word_likelihood_calculator(self):
         word_count = dict()
-        for i in range(len(self.scale)):
-            word_count[i] = dict()
+    
+        for i in range(len(self.scale)):  
+            word_count[i] = dict()  
+            for review in self.reviews:
+                for word in review.phrase:
+                    word_count[i][word] = 1
+
         for review in self.reviews:
             for word in review.phrase:
-                if word in word_count[review.sentiment]:
-                    word_count[review.sentiment][word] += 1
-                else:
-                    word_count[review.sentiment][word] = 1
+                word_count[review.sentiment][word] += 1
+                
         
         likelihood_sum = dict()
         for sentiment in word_count:
             likelihood_sum[sentiment] =  sum(word_count[sentiment].values())
 
-        word_likelihood = word_count
+        self.word_likelihood = word_count
         for sentiment in word_count:
             for word in word_count[sentiment]:
-                word_likelihood[sentiment][word] = word_count[sentiment][word] / likelihood_sum[sentiment]
+                self.word_likelihood[sentiment][word] = word_count[sentiment][word] / (likelihood_sum[sentiment]*2)
         
-        return word_likelihood
+        # for i in self.word_likelihood:
+        #     self.word_likelihood[i] = sum(self.word_likelihood[i].values())
 
+        return self.word_likelihood
 
+    def review_sentiment_calculator(self):
+        self.review_score = dict()
+        for i in self.prior:
+            self.review_score[i] = dict()
+            
+        for sentiment in self.review_score:
+            for review in self.reviews:
+                self.review_score[sentiment][review.id] = self.prior[sentiment]
+                for word in review.phrase:
+                    self.review_score[sentiment][review.id] = self.review_score[sentiment][review.id] * self.word_likelihood[sentiment][word]
 
+        return self.review_score
+
+    def review_sentiment_decider(self):
+        self.review_predicted = dict()
+        for review in self.reviews:
+            temp = dict()
+            for sentiment in self.review_score:
+                temp[sentiment] = self.review_score[sentiment][review.id]
+            self.review_predicted[review.id] = max(temp, key=temp.get)   
+        return self.review_predicted
+            
+ 
 def main():
     
     inputs=parse_args()
@@ -169,9 +178,11 @@ def main():
         classifier = Classifier(reviews_preprocessed, value_5)
     prior_prob = classifier.prior_probability()
     word_likelihoods = classifier.word_likelihood_calculator()
+    reviews_scored = classifier.review_sentiment_calculator()
+    reviews_predicted = classifier.review_sentiment_decider()
 
     f = open('debug.tsv', 'w')
-    f.write(str(word_likelihoods) + '\n' )
+    f.write(str(reviews_predicted) + '\n' )
     f.close()
 
 
