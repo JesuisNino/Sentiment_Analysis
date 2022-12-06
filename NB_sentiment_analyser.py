@@ -7,8 +7,7 @@ Start code.
 import argparse
 import pandas as pd
 import nltk
-import random
-from nltk.corpus import stopwords, movie_reviews
+from nltk.corpus import stopwords
 
 """
 IMPORTANT, modify this part with your details
@@ -226,21 +225,17 @@ def main():
         classifier = Classifier(reviews_preprocessed, number_classes)
     prior=classifier.prior_probability()
 
-    doc = []
-    for categories in movie_reviews.categories():
-        for id in movie_reviews.fileids(categories):
-            doc += list(movie_reviews.words(id))
-
-    stop_list = stopwords.words('english')
-    stop_list.extend([ '``', '\'\'', '...', '--', '.', ',' , '\'', '-', ':', ';', '\'s', '`', '\'re', 'A.'])
-    doc = [r.lower() for r in doc if not r.lower() in stop_list]
-    doc = list(set(doc))
     
-    features_set = doc
+    doc = []
     if features == 'features':
-        likelihood = classifier.word_likelihood_calculator(features_set)
-    else:
-        likelihood = classifier.word_likelihood_calculator([])
+        for r in reviews_preprocessed:
+            temp = nltk.pos_tag(r.phrase)
+            for index in range(len(temp)):
+                # Compare many tags result, JJ has the best performance, it means adjective or numeral, ordinal
+                if temp[index][1] == 'JJ':
+                    doc.append(temp[index][0])
+            
+    likelihood = classifier.word_likelihood_calculator(doc)
 
     #You need to change this in order to return your macro-F1 score for the dev set
     

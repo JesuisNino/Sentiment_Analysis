@@ -9,6 +9,9 @@ The installation guide is showing below:
     * `python3 -m nltk.downloader stopwords`
 3. This is also necessary for stopwords list working:
     * `python3 -m nltk.downloader punkt`
+4. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
+    * `python3 -m nltk.downloader averaged_perceptron_tagger`
+
 
 If you are Windows user or with different python versions or settings, and the above commands didn't work, try this:
 1. For the preprocessing, nltk is used. Install nltk by:
@@ -17,7 +20,9 @@ If you are Windows user or with different python versions or settings, and the a
     * `python -m nltk.downloader stopwords`
 3. This is also necessary for stopwords list working:
     * `python -m nltk.downloader punkt`
-4. If they are still not working. Maybe just download them on the official website. Google them is also a good idea.
+4. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
+    * `python -m nltk.downloader averaged_perceptron_tagger`
+5. If they are still not working. Maybe just download them on the official website. Google them is also a good idea.
 
 # Usage
 See below for a quickstart guide:
