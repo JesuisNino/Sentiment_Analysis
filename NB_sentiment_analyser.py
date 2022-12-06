@@ -87,7 +87,7 @@ class Classifier:
         
         return self.prior
         
-    def word_likelihood_calculator(self):
+    def word_likelihood_calculator(self, features):
         word_count = dict()
     
         for i in range(self.scale):  
@@ -104,9 +104,12 @@ class Classifier:
         for sentiment in word_count:
             likelihood_sum[sentiment] =  sum(word_count[sentiment].values())
 
-        v_set = []
-        for s in word_count:
-            v_set += word_count[s].keys()
+        if len(features) > 0:
+            v_set = features
+        else:
+            v_set = []
+            for s in word_count:
+                v_set += word_count[s].keys()
         v_value = len(list(dict.fromkeys(v_set)))
             
         self.word_likelihood = word_count
@@ -226,7 +229,11 @@ def main():
     else:
         classifier = Classifier(reviews_preprocessed, number_classes)
     prior=classifier.prior_probability()
-    likelihood=classifier.word_likelihood_calculator()
+    features_set = []
+    if features == 'features':
+        likelihood = classifier.word_likelihood_calculator(features_set)
+    else:
+        likelihood = classifier.word_likelihood_calculator([])
 
     #You need to change this in order to return your macro-F1 score for the dev set
     
