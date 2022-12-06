@@ -244,16 +244,17 @@ def main():
     evaluate_dev.review_sentiment_predictor()
     if number_classes == 3:
         f1_result = evaluate_dev.f1_calculator(Preprocess(Review.get_reviews('moviereviews/dev.tsv')).scale_3())
-        f = open('dev_predictions_3classes_acd20xh.tsv', 'w')
+        if output_files:f = open('dev_predictions_3classes_acd20xh.tsv', 'w')
     else:
         f1_result = evaluate_dev.f1_calculator(Review.get_reviews('moviereviews/dev.tsv'))  
-        f = open('dev_predictions_5classes_acd20xh.tsv', 'w')
-    f1_score = evaluate_dev.score_calculator()
-    f.write('SentenceId\tSentiment\n')
-    for r in reviews_dev_preprocessed:
-        f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
-    # f.write(str(test)+'\n')
-    f.close()
+        if output_files:f = open('dev_predictions_5classes_acd20xh.tsv', 'w')
+    if output_files:
+        f1_score = evaluate_dev.score_calculator()
+        f.write('SentenceId\tSentiment\n')
+        for r in reviews_dev_preprocessed:
+            f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
+        # f.write(str(test)+'\n')
+        f.close()
 
     if confusion_matrix:
         match number_classes:
@@ -288,13 +289,14 @@ def main():
     evaluate_test.review_sentiment_calculator()
     evaluate_test.review_sentiment_predictor()
     if number_classes == 3:
-        f = open('test_predictions_3classes_acd20xh.tsv', 'w')
+        if output_files: f = open('test_predictions_3classes_acd20xh.tsv', 'w')
     else:
-        f = open('test_predictions_5classes_acd20xh.tsv', 'w')
-    f.write('SentenceId\tSentiment\n')
-    for r in reviews_test_preprocessed:
-        f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
-    f.close()
+        if output_files: f = open('test_predictions_5classes_acd20xh.tsv', 'w')
+    if output_files:
+        f.write('SentenceId\tSentiment\n')
+        for r in reviews_test_preprocessed:
+            f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
+        f.close()
 
 
     # f1_score = 0
