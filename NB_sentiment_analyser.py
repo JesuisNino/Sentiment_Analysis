@@ -12,7 +12,7 @@ from nltk.corpus import stopwords
 """
 IMPORTANT, modify this part with your details
 """
-USER_ID = "acpXXjd" #your unique student ID, i.e. the IDs starting with "acp", "mm" etc that you use to login into MUSE 
+USER_ID = "acd20xh" #your unique student ID, i.e. the IDs starting with "acp", "mm" etc that you use to login into MUSE 
 
 def parse_args():
     parser=argparse.ArgumentParser(description="A Naive Bayes Sentiment Analyser for the Rotten Tomatoes Movie Reviews dataset")
@@ -32,7 +32,6 @@ class Review:
         self.id = id
         self.phrase = phrase
         self.sentiment = sentiment
-        self.scale = value_5
     
     def get_reviews(filename):
         reviews = []
@@ -61,7 +60,6 @@ class Preprocess:
         return self.reviews
 
     def scale_3(self):
-        self.scale = value_3
         for review in self.reviews:
             match review.sentiment:
                 case 1: review.sentiment = 0
@@ -71,15 +69,12 @@ class Preprocess:
         return self.reviews
 
 
-value_3 = [ 'negative', 'neutral' , 'positive' ]
-value_5 = [ 'negative', 'somewhat negative', 'neutral', 'somewhat positive', 'positive' ]
-
 class Classifier:
     def __init__(self, reviews, scale):
         self.reviews = reviews
         self.prior = dict()
         self.scale = scale
-        for i in range(len(self.scale)):
+        for i in range(self.scale):
             self.prior[i] = 0 
 
     def prior_probability(self):
@@ -95,7 +90,7 @@ class Classifier:
     def word_likelihood_calculator(self):
         word_count = dict()
     
-        for i in range(len(self.scale)):  
+        for i in range(self.scale):  
             word_count[i] = dict()  
             for review in self.reviews:
                 for word in review.phrase:
@@ -105,20 +100,30 @@ class Classifier:
             for word in review.phrase:
                 word_count[review.sentiment][word] += 1
                 
-        
         likelihood_sum = dict()
         for sentiment in word_count:
             likelihood_sum[sentiment] =  sum(word_count[sentiment].values())
 
+        v_set = []
+        for s in word_count:
+            v_set += word_count[s].keys()
+        v_value = len(list(dict.fromkeys(v_set)))
+            
         self.word_likelihood = word_count
         for sentiment in word_count:
             for word in word_count[sentiment]:
-                self.word_likelihood[sentiment][word] = word_count[sentiment][word] / (likelihood_sum[sentiment]*2)
-        
-        # for i in self.word_likelihood:
-        #     self.word_likelihood[i] = sum(self.word_likelihood[i].values())
+                self.word_likelihood[sentiment][word] = word_count[sentiment][word] / (likelihood_sum[sentiment] + v_value)
 
         return self.word_likelihood
+        # return word_count
+
+
+class Evaluator:
+    def __init__(self, reviews, prior, likelihood, scale):
+        self.reviews = reviews
+        self.prior = prior
+        self.likelihood = likelihood
+        self.scale = scale
 
     def review_sentiment_calculator(self):
         self.review_score = dict()
@@ -129,19 +134,63 @@ class Classifier:
             for review in self.reviews:
                 self.review_score[sentiment][review.id] = self.prior[sentiment]
                 for word in review.phrase:
-                    self.review_score[sentiment][review.id] = self.review_score[sentiment][review.id] * self.word_likelihood[sentiment][word]
+                    if word in self.likelihood[sentiment]:
+                        self.review_score[sentiment][review.id] = self.review_score[sentiment][review.id] * self.likelihood[sentiment][word]
 
         return self.review_score
 
-    def review_sentiment_decider(self):
-        self.review_predicted = dict()
+    def review_sentiment_predictor(self):
         for review in self.reviews:
             temp = dict()
             for sentiment in self.review_score:
                 temp[sentiment] = self.review_score[sentiment][review.id]
-            self.review_predicted[review.id] = max(temp, key=temp.get)   
-        return self.review_predicted
-            
+            review.sentiment = max(temp, key=temp.get) 
+        return self.reviews
+
+    def f1_calculator(self, answer_set):
+        self.f1_result = dict()
+        for sentiment_pred in range(self.scale):
+            self.f1_result[sentiment_pred] = dict()
+            for sentiment_true in range(self.scale):
+                self.f1_result[sentiment_pred][sentiment_true] = 0
+        
+        answer_set = [a.sentiment for a in answer_set]
+        predict_set = [r.sentiment for r in self.reviews]
+
+        for i in range(len(answer_set)):
+            if answer_set[i] == predict_set[i]:
+                self.f1_result[answer_set[i]][answer_set[i]] += 1
+            else:   
+                self.f1_result[predict_set[i]][answer_set[i]] += 1
+        
+        return self.f1_result
+    
+    def score_calculator(self):
+        precision = dict()
+        recall = dict()
+        for sentiment_pred in range(self.scale):
+            precision[sentiment_pred] = 0
+            recall[sentiment_pred] = 0
+        precision_sum = dict()
+        recall_sum = dict()
+        for i in range(len(self.f1_result)):
+            precision_sum[i] = sum(self.f1_result[i].values())
+            recall_sum[i] = 0
+            for j in range(len(self.f1_result)):
+                recall_sum[i] += self.f1_result[j][i]
+
+        f1_score_class = dict()
+        for s in self.f1_result:
+            precision[s] = self.f1_result[s][s] / precision_sum[s]
+            recall[s] = self.f1_result[s][s] / recall_sum[s]
+            if precision[s] * recall[s] != 0:
+                f1_score_class[s] = 2 * precision[s] * recall[s] / (precision[s] + recall[s])
+            else:
+                f1_score_class[s] = 0    
+        f1_score = sum(f1_score_class.values()) / len(f1_score_class)
+
+        return f1_score
+                 
  
 def main():
     
@@ -173,22 +222,75 @@ def main():
     reviews_preprocessed = Preprocess(reviews).preprocess_reviews()
     if number_classes == 3: 
         reviews_preprocessed = Preprocess(reviews_preprocessed).scale_3()
-        classifier = Classifier(reviews_preprocessed, value_3)
+        classifier = Classifier(reviews_preprocessed, number_classes)
     else:
-        classifier = Classifier(reviews_preprocessed, value_5)
-    prior_prob = classifier.prior_probability()
-    word_likelihoods = classifier.word_likelihood_calculator()
-    reviews_scored = classifier.review_sentiment_calculator()
-    reviews_predicted = classifier.review_sentiment_decider()
+        classifier = Classifier(reviews_preprocessed, number_classes)
+    prior=classifier.prior_probability()
+    likelihood=classifier.word_likelihood_calculator()
 
-    f = open('debug.tsv', 'w')
-    f.write(str(reviews_predicted) + '\n' )
+    #You need to change this in order to return your macro-F1 score for the dev set
+    
+    reviews_dev = Review.get_reviews('moviereviews/dev.tsv')
+    reviews_dev_preprocessed = Preprocess(reviews_dev).preprocess_reviews()
+    evaluate_dev = Evaluator(reviews_dev_preprocessed, prior, likelihood, number_classes)
+    evaluate_dev.review_sentiment_calculator()
+    evaluate_dev.review_sentiment_predictor()
+    if number_classes == 3:
+        f1_result = evaluate_dev.f1_calculator(Preprocess(Review.get_reviews('moviereviews/dev.tsv')).scale_3())
+        f = open('dev_predictions_3classes_acd20xh.tsv', 'w')
+    else:
+        f1_result = evaluate_dev.f1_calculator(Review.get_reviews('moviereviews/dev.tsv'))  
+        f = open('dev_predictions_5classes_acd20xh.tsv', 'w')
+    f1_score = evaluate_dev.score_calculator()
+    f.write('SentenceId\tSentiment\n')
+    for r in reviews_dev_preprocessed:
+        f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
+    # f.write(str(test)+'\n')
+    f.close()
+
+    if confusion_matrix:
+        match number_classes:
+            case 3: 
+                print("%s\t%i\t%i\t%i" % ('', 0, 1, 2))
+                for i in range(len(f1_result)):
+                    print("%i\t%i\t%i\t%i" % (i, f1_result[i][0], f1_result[i][1], f1_result[i][2]))
+            case 5:
+                print("%s\t%i\t%i\t%i\t%i\t%i" % ('', 0, 1, 2, 3, 4))
+                for i in range(len(f1_result)):
+                    print("%i\t%i\t%i\t%i\t%i\t%i" % (i, f1_result[i][0], f1_result[i][1], f1_result[i][2], f1_result[i][3], f1_result[i][4]))
+
+    
+
+    '''only for test'''
+    # dev = Review.get_reviews('moviereviews/dev.tsv')
+    # if number_classes == 3:
+    #     dev = Preprocess(dev).scale_3()
+    #     f = open('dev_3.tsv', 'w')
+    # else: 
+    #     dev = dev
+    #     f = open('dev_5.tsv', 'w')
+    # for r in dev:
+    #     f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
+    # f.close()
+    '''test'''
+
+
+    reviews_test = Review.get_reviews('moviereviews/test.tsv')
+    reviews_test_preprocessed = Preprocess(reviews_test).preprocess_reviews()
+    evaluate_test = Evaluator(reviews_test_preprocessed, prior, likelihood, number_classes)
+    evaluate_test.review_sentiment_calculator()
+    evaluate_test.review_sentiment_predictor()
+    if number_classes == 3:
+        f = open('test_predictions_3classes_acd20xh.tsv', 'w')
+    else:
+        f = open('test_predictions_5classes_acd20xh.tsv', 'w')
+    f.write('SentenceId\tSentiment\n')
+    for r in reviews_test_preprocessed:
+        f.write(str(r.id) +'\t'+str(r.sentiment) + '\n' )
     f.close()
 
 
-    #You need to change this in order to return your macro-F1 score for the dev set
-    f1_score = 0
-    
+    # f1_score = 0
 
     """
     IMPORTANT: your code should return the lines below. 
