@@ -34,6 +34,7 @@ class Review:
         self.sentiment = sentiment
     
     def get_reviews(filename):
+        # Read files using pandas
         reviews = []
         file = pd.read_csv(filename, index_col=0, delimiter='\t')
 
@@ -60,6 +61,7 @@ class Preprocess:
         return self.reviews
 
     def scale_3(self):
+        # Make the training set or the development set become 3 classes
         for review in self.reviews:
             match review.sentiment:
                 case 1: review.sentiment = 0
@@ -78,6 +80,7 @@ class Classifier:
             self.prior[i] = 0 
 
     def prior_probability(self):
+        # Calculate the prior probability of each sentiment
         self.total_reviews = len(self.reviews)
         for review in self.reviews:
                 self.prior[review.sentiment] += 1
@@ -88,6 +91,7 @@ class Classifier:
         return self.prior
         
     def word_likelihood_calculator(self, features):
+        # Calculate the likelihood of each word with features
         if len(features) > 0:
             for r in self.reviews:
                 r.phrase = [w for w in r.phrase if w in features]
@@ -100,11 +104,12 @@ class Classifier:
                 for word in review.phrase:
                     word_count[i][word] = 0
 
+        # Calculate how many times the word occurs inside of the reviews for each sentiment     
         for review in self.reviews:
             for word in review.phrase:
                 word_count[review.sentiment][word] += 1
         
-                
+        # Calculate how many times the word occurs inside of the reviews in total       
         likelihood_sum = dict()
         for sentiment in word_count:
             likelihood_sum[sentiment] =  sum(word_count[sentiment].values())
@@ -133,6 +138,7 @@ class Evaluator:
         self.scale = scale
 
     def review_sentiment_calculator(self):
+        # Calculate the sentiment probability of each review      
         self.review_score = dict()
         for i in self.prior:
             self.review_score[i] = dict()
@@ -147,6 +153,7 @@ class Evaluator:
         return self.review_score
 
     def review_sentiment_predictor(self):
+        # Decide and predict which sentiment should each review be
         for review in self.reviews:
             temp = dict()
             for sentiment in self.review_score:
@@ -155,6 +162,7 @@ class Evaluator:
         return self.reviews
 
     def f1_calculator(self, answer_set):
+        # Calculate and count the data in the confusion matrix
         self.f1_result = dict()
         for sentiment_pred in range(self.scale):
             self.f1_result[sentiment_pred] = dict()
@@ -173,6 +181,7 @@ class Evaluator:
         return self.f1_result
     
     def score_calculator(self):
+        # Calculate macro f1 scores based on the development set
         precision_sum = dict()
         recall_sum = dict()
         for i in range(len(self.f1_result)):
