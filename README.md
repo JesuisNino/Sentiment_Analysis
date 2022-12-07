@@ -1,3 +1,6 @@
+# Introduction
+The choice of tags clearly reflects the importance and decisiveness of adjectives for the sentiments of reviews. Compared to other words of the lexical nature, adjectives possess a stronger emotional dimension.
+
 # Installation
 The Python version is 3.10. The develop system is macOS Ventura 13.0.1 (M1).
 
