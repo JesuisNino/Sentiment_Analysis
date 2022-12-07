@@ -5,27 +5,30 @@ The choice of tags clearly reflects the importance and decisiveness of adjective
 The Python version is 3.10. The develop system is macOS Ventura 13.0.1 (M1).
 
 The installation guide is showing below:
-
-1. For the preprocessing, nltk is used. Install nltk by:
+1. For reading the files, pandas is used. Install pandas by:
+    * `pip3 install pandas`
+2. For the preprocessing, nltk is used. Install nltk by:
     * `pip3 install nltk` / `pip3 install --user -U nltk`
-2. Install the stopwords list from nltk by:
+3. Install the stopwords list from nltk by:
     * `python3 -m nltk.downloader stopwords`
-3. This is also necessary for stopwords list working:
+4. This is also necessary for stopwords list working:
     * `python3 -m nltk.downloader punkt`
-4. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
+5. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
     * `python3 -m nltk.downloader averaged_perceptron_tagger`
 
 
 If you are Windows user or with different python versions or settings, and the above commands didn't work, try this:
-1. For the preprocessing, nltk is used. Install nltk by:
+1. For reading the files, pandas is used. Install pandas by:
+    * `pip install pandas`
+2. For the preprocessing, nltk is used. Install nltk by:
     * `pip install nltk` / `pip install --user -U nltk`
-2. Install the stopwords list from nltk by:
+3. Install the stopwords list from nltk by:
     * `python -m nltk.downloader stopwords`
-3. This is also necessary for stopwords list working:
+4. This is also necessary for stopwords list working:
     * `python -m nltk.downloader punkt`
-4. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
+5. For the features selection, I used nltk.pos_tag to tag all the phrase words. Based on the tags, I used several way to select features. Thus, for installing pos_tag, please do:
     * `python -m nltk.downloader averaged_perceptron_tagger`
-5. If they are still not working. Maybe just download them on the official website. Google them is also a good idea.
+6. If they are still not working. Maybe just download them on the official website. Google them is also a good idea.
 
 # Usage
 See below for a quickstart guide:
