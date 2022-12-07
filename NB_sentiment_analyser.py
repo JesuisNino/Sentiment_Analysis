@@ -245,10 +245,10 @@ def main():
     evaluate_dev.review_sentiment_calculator()
     evaluate_dev.review_sentiment_predictor()
     if number_classes == 3:
-        f1_result = evaluate_dev.f1_calculator(Preprocess(Review.get_reviews('moviereviews/dev.tsv')).scale_3())
+        f1_result = evaluate_dev.f1_calculator(Preprocess(Review.get_reviews(dev)).scale_3())
         if output_files:f = open('dev_predictions_3classes_acd20xh.tsv', 'w')
     else:
-        f1_result = evaluate_dev.f1_calculator(Review.get_reviews('moviereviews/dev.tsv'))  
+        f1_result = evaluate_dev.f1_calculator(Review.get_reviews(dev))  
         if output_files:f = open('dev_predictions_5classes_acd20xh.tsv', 'w')
     f1_score = evaluate_dev.score_calculator()
     if output_files:
